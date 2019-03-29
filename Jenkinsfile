@@ -1,5 +1,6 @@
 // Set your project Prefix
 def prefix      = "jei"
+def contextDir = "openshift-tasks"
 
 // Set variable globally to be available in all stages
 // Set Maven command to always include Nexus Settings
@@ -16,10 +17,6 @@ def activeApp   = ""
 
 pipeline {
 
-    // agent {
-    //     // Using the Jenkins Agent Pod that we defined earlier
-    //     label "maven-appdev"
-    // }
     agent {
         kubernetes {
         label "maven-appdev"
@@ -42,7 +39,7 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    def pom = readMavenPom file: 'pom.xml'
+                    def pom = readMavenPom file: "${workspace}/${contextDir}/pom.xml"
                     def version = pom.version
                     // TBD: Set the tag for the development image: version + build number.
                     devTag  = "${version}-" + currentBuild.number
@@ -59,15 +56,16 @@ pipeline {
             }
         }
 
-        // stage('Unit Tests') {
-        //     steps {
-        //         echo "Running Unit Tests"
-        //         sh "${mvnCmd} test"
-        //         // It displays the results of tests in the Jenkins Task Overview
-        //         junit '**/target/surefire-reports/TEST-*.xml'
-        //         // step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
-        //     }
-        // }
+        stage('Unit Tests') {
+
+            steps {
+                echo "Running Unit Tests"
+                sh "${mvnCmd} test"
+                // It displays the results of tests in the Jenkins Task Overview
+                junit '**/target/surefire-reports/TEST-*.xml'
+                // step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
+            }
+        }
 
         // stage('Code Analysis') {
         //     steps {
