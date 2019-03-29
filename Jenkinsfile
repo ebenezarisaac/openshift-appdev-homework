@@ -16,9 +16,24 @@ def activeApp   = ""
 
 pipeline {
 
+    // agent {
+    //     // Using the Jenkins Agent Pod that we defined earlier
+    //     label "maven-appdev"
+    // }
     agent {
-        // Using the Jenkins Agent Pod that we defined earlier
+        kubernetes {
         label "maven-appdev"
+        cloud "openshift"
+        inheritFrom "maven"
+        containerTemplate {
+            name "jnlp"
+            image "docker-registry.default.svc:5000/784c-jenkins/jenkins-agent-appdev:latest"
+            resourceRequestMemory "1Gi"
+            resourceLimitMemory "2Gi"
+            resourceRequestCpu "1"
+            resourceLimitCpu "2"
+        }
+        }
     }
 
     stages {
