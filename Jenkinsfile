@@ -57,29 +57,37 @@ pipeline {
                 echo $JAVA_HOME
                 echo $MAVEN_HOME
                 echo $M2_HOME
-                mvn
+                mvn -v
+                which mvn
                 '''
                 sh "${mvnCmd} clean package -DskipTests=true"
             }
         }
 
-        stage('Unit Tests') {
+        // stage('Run tests') {
+        //     parallel {
+        //         stage('Unit Tests') {
+        //             steps {
+        //                 echo "Running Unit Tests"
+        //                 sh "${mvnCmd} test"
+        //                 // It displays the results of tests in the Jenkins Task Overview
+        //                 junit '**/target/surefire-reports/TEST-*.xml'
+        //                 // step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
+        //             }
+        //         }
 
-            steps {
-                echo "Running Unit Tests"
-                sh "${mvnCmd} test"
-                // It displays the results of tests in the Jenkins Task Overview
-                junit '**/target/surefire-reports/TEST-*.xml'
-                // step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
-            }
-        }
-
-        // stage('Code Analysis') {
-        //     steps {
-        //         echo "Running Code Analysis"
-        //         sh "${mvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube-jei-sonarqube.apps.7b10.openshift.opentlc.com/ -Dsonar.projectName=${JOB_BASE_NAME} -Dsonar.projectVersion=${devTag}"
+        //         stage('Code Analysis') {
+        //             steps {
+        //                 echo "Running Code Analysis"
+        //                 sh "${mvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube.gpte-hw-cicd.svc.cluster.local:9000/ -Dsonar.projectName=${JOB_BASE_NAME} -Dsonar.projectVersion=${devTag}"
+        //             }
+        //         }
         //     }
         // }
+
+
+
+
 
         // stage('Publish to Nexus') {
         //     steps {
