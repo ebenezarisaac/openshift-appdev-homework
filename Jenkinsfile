@@ -54,9 +54,9 @@ pipeline {
                 echo "Building version ${devTag}"
                 sh '''
                 java -version
-                echo JAVA_HOME
-                echo MAVEN_HOME
-                echo M2_HOME
+                echo $JAVA_HOME
+                echo $MAVEN_HOME
+                echo $M2_HOME
                 mvn
                 '''
                 sh "${mvnCmd} clean package -DskipTests=true"
