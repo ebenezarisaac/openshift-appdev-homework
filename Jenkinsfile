@@ -4,7 +4,7 @@ def contextDir = "openshift-tasks"
 
 // Set variable globally to be available in all stages
 // Set Maven command to always include Nexus Settings
-def mvnCmd      = "mvn -s nexus_settings.xml -f ${contextDir}/pom.xml"
+def mvnCmd      = "mvn -s nexus_settings.xml -f ./${contextDir}/pom.xml"
 // Set Development and Production Project Names
 def devProject  = "jei-tasks-dev"
 def prodProject = "jei-tasks-prod"
