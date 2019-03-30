@@ -4,7 +4,7 @@ def contextDir = "openshift-tasks"
 
 // Set variable globally to be available in all stages
 // Set Maven command to always include Nexus Settings
-def mvnCmd      = "mvn -s nexus_settings.xml"
+def mvnCmd      = "mvn -s nexus_settings.xml -f ${WORKSPACE}/${contextDir}/pom.xml"
 // Set Development and Production Project Names
 def devProject  = "jei-tasks-dev"
 def prodProject = "jei-tasks-prod"
@@ -53,14 +53,6 @@ pipeline {
         stage('Build War File') {
             steps {
                 echo "Building version ${devTag}"
-                sh '''
-                java -version
-                echo $JAVA_HOME
-                echo $MAVEN_HOME
-                echo $M2_HOME
-                mvn -v
-                which mvn
-                '''
                 sh "${mvnCmd} clean package -DskipTests=true"
             }
         }
