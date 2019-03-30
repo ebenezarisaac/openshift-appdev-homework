@@ -4,7 +4,7 @@ def contextDir = "openshift-tasks"
 
 // Set variable globally to be available in all stages
 // Set Maven command to always include Nexus Settings
-def mvnCmd      = "mvn -s ${contextDir}/nexus_openshift_settings.xml"
+def mvnCmd      = "mvn -s ${contextDir}/nexus_settings.xml"
 // Set Development and Production Project Names
 def devProject  = "jei-tasks-dev"
 def prodProject = "jei-tasks-prod"
@@ -65,26 +65,26 @@ pipeline {
             }
         }
 
-        // stage('Run tests') {
-        //     parallel {
-        //         stage('Unit Tests') {
-        //             steps {
-        //                 echo "Running Unit Tests"
-        //                 sh "${mvnCmd} test"
-        //                 // It displays the results of tests in the Jenkins Task Overview
-        //                 junit '**/target/surefire-reports/TEST-*.xml'
-        //                 // step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
-        //             }
-        //         }
+        stage('Run tests') {
+            parallel {
+                stage('Unit Tests') {
+                    steps {
+                        echo "Running Unit Tests"
+                        sh "${mvnCmd} test"
+                        // It displays the results of tests in the Jenkins Task Overview
+                        junit '**/target/surefire-reports/TEST-*.xml'
+                        // step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
+                    }
+                }
 
-        //         stage('Code Analysis') {
-        //             steps {
-        //                 echo "Running Code Analysis"
-        //                 sh "${mvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube.gpte-hw-cicd.svc.cluster.local:9000/ -Dsonar.projectName=${JOB_BASE_NAME} -Dsonar.projectVersion=${devTag}"
-        //             }
-        //         }
-        //     }
-        // }
+                stage('Code Analysis') {
+                    steps {
+                        echo "Running Code Analysis"
+                        sh "${mvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube.gpte-hw-cicd.svc.cluster.local:9000/ -Dsonar.projectName=${JOB_BASE_NAME} -Dsonar.projectVersion=${devTag}"
+                    }
+                }
+            }
+        }
 
 
 
