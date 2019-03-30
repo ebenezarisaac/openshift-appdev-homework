@@ -50,44 +50,42 @@ pipeline {
             }      
         }
 
-        stage('Build War File') {
-            steps {
-                echo "Building version ${devTag}"
-                sh "${mvnCmd} clean package -DskipTests=true"
-            }
-        }
-
-        stage('Run tests') {
-            parallel {
-                stage('Unit Tests') {
-                    steps {
-                        echo "Running Unit Tests"
-                        sh "${mvnCmd} test"
-                        // It displays the results of tests in the Jenkins Task Overview
-                        junit '**/target/surefire-reports/TEST-*.xml'
-                        // step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
-                    }
-                }
-
-                stage('Code Analysis') {
-                    steps {
-                        echo "Running Code Analysis"
-                        sh "${mvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube.gpte-hw-cicd.svc.cluster.local:9000/ -Dsonar.projectName=${JOB_BASE_NAME} -Dsonar.projectVersion=${devTag}"
-                    }
-                }
-            }
-        }
-
-
-
-
-
-        // stage('Publish to Nexus') {
+        // stage('Build War File') {
         //     steps {
-        //         echo "Publish to Nexus"
-        //         sh "${mvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3.${prefix}-nexus.svc.cluster.local:8081/repository/releases"
+        //         echo "Building version ${devTag}"
+        //         sh "${mvnCmd} clean package -DskipTests=true"
         //     }
         // }
+
+        // stage('Run tests') {
+        //     parallel {
+        //         stage('Unit Tests') {
+        //             steps {
+        //                 echo "Running Unit Tests"
+        //                 sh "${mvnCmd} test"
+        //                 // It displays the results of tests in the Jenkins Task Overview
+        //                 junit '**/target/surefire-reports/TEST-*.xml'
+        //                 // step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
+        //             }
+        //         }
+
+        //         stage('Code Analysis') {
+        //             steps {
+        //                 echo "Running Code Analysis"
+        //                 sh "${mvnCmd} sonar:sonar -Dsonar.host.url=http://sonarqube.gpte-hw-cicd.svc.cluster.local:9000/ -Dsonar.projectName=${JOB_BASE_NAME} -Dsonar.projectVersion=${devTag}"
+        //             }
+        //         }
+        //     }
+        // }
+
+
+        stage('Publish to Nexus') {
+            steps {
+                echo "Publish to Nexus"
+                // sh "${mvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3.${prefix}-nexus.svc.cluster.local:8081/repository/releases"
+                sh "${mvnCmd} deploy -DskipTests=true -DaltDeploymentRepository=nexus::default::http://nexus3.gpte-hw-cicd.svc.cluster.local:8081/repository/all-maven-public"
+            }
+        }
 
 //         stage('Build and Tag Openshift Image') {
 //             steps {
