@@ -50,12 +50,12 @@ pipeline {
             }      
         }
 
-        // stage('Build War File') {
-        //     steps {
-        //         echo "Building version ${devTag}"
-        //         sh "${mvnCmd} clean package -DskipTests=true"
-        //     }
-        // }
+        stage('Build War File') {
+            steps {
+                echo "Building version ${devTag}"
+                sh "${mvnCmd} clean package -DskipTests=true"
+            }
+        }
 
         // stage('Run tests') {
         //     parallel {
