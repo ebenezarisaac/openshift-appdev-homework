@@ -1,6 +1,7 @@
 // Set your project Prefix
 def prefix      = "jei"
 def contextDir = "openshift-tasks"
+def GUID = "784c"
 
 // Set variable globally to be available in all stages
 // Set Maven command to always include Nexus Settings
@@ -40,6 +41,7 @@ pipeline {
             steps {
                 checkout scm
                 script {
+                    sh "whoami"
                     def pom = readMavenPom file: "${workspace}/${contextDir}/pom.xml"
                     def version = pom.version
                     // TBD: Set the tag for the development image: version + build number.
@@ -120,7 +122,7 @@ pipeline {
 
                             // Set VERSION environment variable
                             openshift.set("env", "dc/tasks", "VERSION='${devTag} (tasks-dev)'", "--overwrite")
-                            def configmap = openshift.create('configmap', 'tasks-config', '--from-file=./${contextDir}/configuration/application-users.properties', '--from-file=./${contextDir}/configuration/application-roles.properties')                            
+                            def configmap = openshift.create('configmap', 'tasks-config', "--from-file=./${contextDir}/configuration/application-users.properties", "--from-file=./${contextDir}/configuration/application-roles.properties")                            
 
                             //  Deploy the development application
                             openshift.selector("dc", "tasks").rollout().latest();
@@ -147,7 +149,7 @@ pipeline {
             steps {
                 echo "Copy image to Nexus Docker Registry"
                 script {
-                    sh "skopeo copy --src-tls-verify=false --dest-tls-verify=false --src-creds user17:\$(oc whoami -t) --dest-creds=admin:redhat docker://docker-registry.default.svc:5000/${GUID}-tasks-dev/tasks:${devTag} docker://nexus-registry.gpte-hw-cicd.svc.cluster.local:5000/${GUID}-tasks-dev/tasks:${prodTag}"
+                    sh "skopeo copy --src-tls-verify=false --dest-tls-verify=false --src-creds $(whoami):\$(oc whoami -t) --dest-creds=admin:redhat docker://docker-registry.default.svc:5000/${GUID}-tasks-dev/tasks:${devTag} docker://nexus-registry.gpte-hw-cicd.svc.cluster.local:5000/${GUID}-tasks-dev/tasks:${prodTag}"
                     // Tag the built image with the production tag.
                     openshift.withCluster() {
                         openshift.withProject("${prodProject}") {
