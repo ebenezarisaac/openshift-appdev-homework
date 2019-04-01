@@ -122,6 +122,7 @@ pipeline {
 
                             // Set VERSION environment variable
                             openshift.set("env", "dc/tasks", "VERSION='${devTag} (tasks-dev)'", "--overwrite")
+                            openshift.selector('configmap', 'tasks-config').delete()
                             def configmap = openshift.create('configmap', 'tasks-config', "--from-file=./${contextDir}/configuration/application-users.properties", "--from-file=./${contextDir}/configuration/application-roles.properties")                            
 
                             //  Deploy the development application
@@ -182,7 +183,7 @@ pipeline {
                             openshift.apply(dc)
 
                             // Update Config Map in change config files changed in the source
-                            // openshift.selector("configmap", "${destApp}-config").delete()
+                            openshift.selector("configmap", "${destApp}-config").delete()
                             def configmap = openshift.create("configmap", "${destApp}-config", "--from-file=./${contextDir}/configuration/application-users.properties", "--from-file=./${contextDir}/configuration/application-roles.properties" )
 
                             // Deploy the inactive application.
