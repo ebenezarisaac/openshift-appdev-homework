@@ -149,7 +149,7 @@ pipeline {
             steps {
                 echo "Copy image to Nexus Docker Registry"
                 script {
-                    sh "skopeo copy --src-tls-verify=false --dest-tls-verify=false --src-creds $(whoami):\$(oc whoami -t) --dest-creds=admin:redhat docker://docker-registry.default.svc:5000/${GUID}-tasks-dev/tasks:${devTag} docker://nexus-registry.gpte-hw-cicd.svc.cluster.local:5000/${GUID}-tasks-dev/tasks:${prodTag}"
+                    sh "skopeo copy --src-tls-verify=false --dest-tls-verify=false --src-creds \$(whoami):\$(oc whoami -t) --dest-creds=admin:redhat docker://docker-registry.default.svc:5000/${GUID}-tasks-dev/tasks:${devTag} docker://nexus-registry.gpte-hw-cicd.svc.cluster.local:5000/${GUID}-tasks-dev/tasks:${prodTag}"
                     // Tag the built image with the production tag.
                     openshift.withCluster() {
                         openshift.withProject("${prodProject}") {
