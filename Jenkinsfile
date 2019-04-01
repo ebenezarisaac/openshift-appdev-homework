@@ -116,7 +116,10 @@ pipeline {
                             openshift.set("image", "dc/tasks", "tasks=docker-registry.default.svc:5000/${devProject}/tasks:${devTag}")
                             // Update the Config Map which contains the users for the Tasks application
                             // (just in case the properties files changed in the latest commit)
-                            openshift.selector('configmap', 'tasks-config').delete()
+                            // openshift.selector('configmap', 'tasks-config').delete()
+
+                            // Set VERSION environment variable
+                            openshift.set("env", "dc/tasks", "VERSION='${devTag} (tasks-dev)'", "--overwrite")
                             def configmap = openshift.create('configmap', 'tasks-config', '--from-file=./${contextDir}/configuration/application-users.properties', '--from-file=./${contextDir}/configuration/application-roles.properties')                            
 
                             //  Deploy the development application
@@ -138,53 +141,22 @@ pipeline {
             }
         }
 
-//         // Run Integration Tests in the Development Environment.
-//         // stage('Integration Tests') {
-//         //     steps {
-//         //         echo "Running Integration Tests"
-//         //         script {
-//         //             def status = "000"
 
-//         //             // Create a new task called "integration_test_1"
-//         //             echo "Creating task"
-//         //             status = sh(returnStdout: true, script: "curl -sw '%{response_code}' -o /dev/null -u 'tasks:redhat1' -H 'Content-Length: 0' -X POST http://tasks.${prefix}-tasks-dev.svc.cluster.local:8080/ws/tasks/integration_test_1").trim()
-//         //             echo "Status: " + status
-//         //             if (status != "201") {
-//         //                 error 'Integration Create Test Failed!'
-//         //             }
-
-//         //             echo "Retrieving tasks"
-//         //             status = sh(returnStdout: true, script: "curl -sw '%{response_code}' -o /dev/null -u 'tasks:redhat1' -H 'Accept: application/json' -X GET http://tasks.${prefix}-tasks-dev.svc.cluster.local:8080/ws/tasks/1").trim()
-//         //             if (status != "200") {
-//         //                 error 'Integration Get Test Failed!'
-//         //             }
-
-//         //             echo "Deleting tasks"
-//         //             status = sh(returnStdout: true, script: "curl -sw '%{response_code}' -o /dev/null -u 'tasks:redhat1' -X DELETE http://tasks.${prefix}-tasks-dev.svc.cluster.local:8080/ws/tasks/1").trim()
-//         //             if (status != "204") {
-//         //                 error 'Integration Create Test Failed!'
-//         //             }
-//         //         }
-//         //     }
-//         // }
-
-//         // Copy Image to Nexus Docker Registry
-//         stage('Copy Image to Nexus Docker Registry') {
-//             steps {
-//                 echo "Copy image to Nexus Docker Registry"
-//                 script {
-//                     // sh "skopeo copy --src-tls-verify=false --dest-tls-verify=false --src-creds user17:\$(oc whoami -t) --dest-creds admin:admin123 docker://docker-registry.default.svc.cluster.local:5000/${devProject}/tasks:${devTag} docker://nexus3-registry.${prefix}-nexus.svc.cluster.local:5000/tasks:${devTag}"
-//                     // sh "skopeo copy --src-tls-verify=false --dest-tls-verify=false --src-creds user17:\$(oc whoami -t) --dest-creds admin:admin123 docker://docker-registry.default.svc.cluster.local:5000/${devProject}/tasks:${devTag} docker://nexus3-registry.${prefix}-nexus.svc.cluster.local:5000/tasks:${devTag}"
-//                     sh "skopeo copy --src-tls-verify=false --dest-tls-verify=false --src-creds user17:\$(oc whoami -t) --dest-creds admin:admin123 docker://docker-registry.default.svc.cluster.local:5000/${devProject}/tasks:${devTag} docker://nexus-registry-jei-nexus.apps.7b10.openshift.opentlc.com/tasks:${devTag}"
-//                     // Tag the built image with the production tag.
-//                     openshift.withCluster() {
-//                         openshift.withProject("${prodProject}") {
-//                             openshift.tag("${devProject}/tasks:${devTag}", "${devProject}/tasks:${prodTag}")
-//                         }
-//                     }
-//                 }
-//             }
-//         }
+        // Copy Image to Nexus Docker Registry
+        stage('Copy Image to Nexus Docker Registry') {
+            steps {
+                echo "Copy image to Nexus Docker Registry"
+                script {
+                    sh "skopeo copy --src-tls-verify=false --dest-tls-verify=false --src-creds user17:\$(oc whoami -t) --dest-creds=admin:redhat docker://docker-registry.default.svc:5000/${GUID}-tasks-dev/tasks:${devTag} docker://nexus-registry.gpte-hw-cicd.svc.cluster.local:5000/${GUID}-tasks-dev/tasks:${prodTag}"
+                    // Tag the built image with the production tag.
+                    openshift.withCluster() {
+                        openshift.withProject("${prodProject}") {
+                            openshift.tag("${devProject}/tasks:${devTag}", "${devProject}/tasks:${prodTag}")
+                        }
+                    }
+                }
+            }
+        }
 
 //         // Blue/Green Deployment into Production
 //         // -------------------------------------
