@@ -6,8 +6,8 @@ def contextDir = "openshift-tasks"
 // Set Maven command to always include Nexus Settings
 def mvnCmd      = "mvn -s nexus_settings.xml -f ./${contextDir}/pom.xml"
 // Set Development and Production Project Names
-def devProject  = "jei-tasks-dev"
-def prodProject = "jei-tasks-prod"
+def devProject  = "784c-tasks-dev"
+def prodProject = "784c-tasks-prod"
 // Set the tag for the development image: version + build number
 def devTag      = "0.0-0"
 // Set the tag for the production image: version
@@ -87,56 +87,56 @@ pipeline {
             }
         }
 
-//         stage('Build and Tag Openshift Image') {
-//             steps {
-//                 echo "Building OpenShift container image tasks:${devTag}"
-//                 // Start Binary Build in OpenShift using the file we just published
-//                 // The filename is openshift-tasks.war in the 'target' directory of your current
-//                 // Jenkins workspace
-//                 script {
-//                     openshift.withCluster() {
-//                         openshift.withProject("${devProject}") {
-//                             openshift.selector("bc", "tasks").startBuild("--from-file=./target/openshift-tasks.war", "--wait=true")
-//                                 // OR use the file you just published into Nexus:
-//                                 // "--from-file=http://nexus3.${prefix}-nexus.svc.cluster.local:8081/repository/releases/org/jboss/quickstarts/eap/tasks/${version}/tasks-${version}.war"
-//                             openshift.tag("tasks:latest", "tasks:${devTag}")
-//                         }
-//                     }
-//                 }
-//             }
-//         }
+        stage('Build and Tag Openshift Image') {
+            steps {
+                echo "Building OpenShift container image tasks:${devTag}"
+                // Start Binary Build in OpenShift using the file we just published
+                // The filename is openshift-tasks.war in the 'target' directory of your current
+                // Jenkins workspace
+                script {
+                    openshift.withCluster() {
+                        openshift.withProject("${devProject}") {
+                            openshift.selector("bc", "tasks").startBuild("--from-file=./${contextDir}/target/openshift-tasks.war", "--wait=true")
+                                // OR use the file you just published into Nexus:
+                                // "--from-file=http://nexus3.${prefix}-nexus.svc.cluster.local:8081/repository/releases/org/jboss/quickstarts/eap/tasks/${version}/tasks-${version}.war"
+                            openshift.tag("tasks:latest", "tasks:${devTag}")
+                        }
+                    }
+                }
+            }
+        }
 
-//         stage('Deploy to Dev') {
-//             steps {
-//                 echo "Deploy container image to Development Project"
-//                 script {
-//                     // Update the Image on the Development Deployment Config
-//                     openshift.withCluster() {
-//                         openshift.withProject("${devProject}") {
-//                             openshift.set("image", "dc/tasks", "tasks=docker-registry.default.svc:5000/${devProject}/tasks:${devTag}")
-//                             // Update the Config Map which contains the users for the Tasks application
-//                             // (just in case the properties files changed in the latest commit)
-//                             openshift.selector('configmap', 'tasks-config').delete()
-//                             def configmap = openshift.create('configmap', 'tasks-config', '--from-file=./configuration/application-users.properties', '--from-file=./configuration/application-roles.properties')                            
+        stage('Deploy to Dev') {
+            steps {
+                echo "Deploy container image to Development Project"
+                script {
+                    // Update the Image on the Development Deployment Config
+                    openshift.withCluster() {
+                        openshift.withProject("${devProject}") {
+                            openshift.set("image", "dc/tasks", "tasks=docker-registry.default.svc:5000/${devProject}/tasks:${devTag}")
+                            // Update the Config Map which contains the users for the Tasks application
+                            // (just in case the properties files changed in the latest commit)
+                            openshift.selector('configmap', 'tasks-config').delete()
+                            def configmap = openshift.create('configmap', 'tasks-config', '--from-file=./configuration/application-users.properties', '--from-file=./configuration/application-roles.properties')                            
 
-//                             //  Deploy the development application
-//                             openshift.selector("dc", "tasks").rollout().latest();
+                            //  Deploy the development application
+                            openshift.selector("dc", "tasks").rollout().latest();
 
-//                             // Wait for application to be deployed
-//                             def dc = openshift.selector("dc", "tasks").object()
-//                             def dc_version = dc.status.latestVersion
-//                             def rc = openshift.selector("rc", "tasks-${dc_version}").object()
+                            // Wait for application to be deployed
+                            def dc = openshift.selector("dc", "tasks").object()
+                            def dc_version = dc.status.latestVersion
+                            def rc = openshift.selector("rc", "tasks-${dc_version}").object()
 
-//                             echo "Waiting for Replicationcontroller tasks-${dc_version} to be ready"
-//                             while (rc.spec.replicas != rc.status.readyReplicas) {
-//                                 sleep 5
-//                                 rc = openshift.selector("rc", "tasks-${dc_version}").object()
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
-//         }
+                            echo "Waiting for Replicationcontroller tasks-${dc_version} to be ready"
+                            while (rc.spec.replicas != rc.status.readyReplicas) {
+                                sleep 5
+                                rc = openshift.selector("rc", "tasks-${dc_version}").object()
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
 //         // Run Integration Tests in the Development Environment.
 //         // stage('Integration Tests') {
