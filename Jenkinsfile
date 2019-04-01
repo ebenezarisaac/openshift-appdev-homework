@@ -117,7 +117,7 @@ pipeline {
                             // Update the Config Map which contains the users for the Tasks application
                             // (just in case the properties files changed in the latest commit)
                             openshift.selector('configmap', 'tasks-config').delete()
-                            def configmap = openshift.create('configmap', 'tasks-config', '--from-file=./configuration/application-users.properties', '--from-file=./configuration/application-roles.properties')                            
+                            def configmap = openshift.create('configmap', 'tasks-config', '--from-file=./${contextDir}/configuration/application-users.properties', '--from-file=./${contextDir}/configuration/application-roles.properties')                            
 
                             //  Deploy the development application
                             openshift.selector("dc", "tasks").rollout().latest();
