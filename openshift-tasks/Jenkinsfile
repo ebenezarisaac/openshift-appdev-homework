@@ -1,5 +1,8 @@
 #!groovy
 def GUID = "784c"
+def devProject  = "784c-tasks-dev"
+def prodProject = "784c-tasks-prod"
+
 podTemplate(
   label: "skopeo-pod",
   cloud: "openshift",
@@ -90,7 +93,7 @@ podTemplate(
               script {
                   openshift.withCluster() {
                       openshift.withProject("${devProject}") {
-                          openshift.selector("bc", "tasks").startBuild("--from-file=./${contextDir}/target/openshift-tasks.war", "--wait=true")
+                          openshift.selector("bc", "tasks").startBuild("--from-file=./target/openshift-tasks.war", "--wait=true")
                               // OR use the file you just published into Nexus:
                               // "--from-file=http://nexus3.${prefix}-nexus.svc.cluster.local:8081/repository/releases/org/jboss/quickstarts/eap/tasks/${version}/tasks-${version}.war"
                           openshift.tag("tasks:latest", "tasks:${devTag}")
@@ -104,6 +107,7 @@ podTemplate(
       stage('Deploy to Dev') {
           steps {
               echo "Deploy container image to Development Project"
+              sh("oc delete configmap tasks-config --ignore-not-found=true -n ${devProject}") 
               script {
                   // Update the Image on the Development Deployment Config
                   openshift.withCluster() {
@@ -115,8 +119,8 @@ podTemplate(
 
                           // Set VERSION environment variable
                           openshift.set("env", "dc/tasks", "VERSION='${devTag} (tasks-dev)'", "--overwrite")
-                          openshift.selector('configmap', 'tasks-config').delete()
-                          def configmap = openshift.create('configmap', 'tasks-config', "--from-file=./${contextDir}/configuration/application-users.properties", "--from-file=./${contextDir}/configuration/application-roles.properties")                            
+                          // openshift.selector('configmap', 'tasks-config').delete()
+                          def configmap = openshift.create('configmap', 'tasks-config', "--from-file=./${contextDir}/configuration/application-users.properties", "--from-file=./configuration/application-roles.properties")                            
 
                           //  Deploy the development application
                           openshift.selector("dc", "tasks").rollout().latest();
@@ -142,7 +146,7 @@ podTemplate(
           steps {
               echo "Copy image to Nexus Docker Registry"
               script {
-                  sh "skopeo copy --src-tls-verify=false --dest-tls-verify=false --src-creds \$(whoami):\$(oc whoami -t) --dest-creds=admin:redhat docker://docker-registry.default.svc:5000/${GUID}-tasks-dev/tasks:${devTag} docker://nexus-registry.gpte-hw-cicd.svc.cluster.local:5000/${GUID}-tasks-dev/tasks:${prodTag}"
+                  sh "skopeo copy --src-tls-verify=false --dest-tls-verify=false --src-creds openshift:\$(oc whoami -t) --dest-creds=admin:redhat docker://docker-registry.default.svc:5000/${GUID}-tasks-dev/tasks:${devTag} docker://nexus-registry.gpte-hw-cicd.svc.cluster.local:5000/${GUID}-tasks-dev/tasks:${prodTag}"
                   // Tag the built image with the production tag.
                   openshift.withCluster() {
                       openshift.withProject("${prodProject}") {
@@ -157,9 +161,12 @@ podTemplate(
       // -------------------------------------
       def destApp   = "tasks-green"
       def activeApp = ""
+
       stage('Blue/Green Production Deployment') {
           steps {
               echo "Blue/Green Deployment"
+
+              sh("oc delete configmap ${destApp}-config --ignore-not-found=true -n ${prodProject}") 
               script {
                   openshift.withCluster() {
                       openshift.withProject("${prodProject}") {
@@ -173,11 +180,12 @@ podTemplate(
                           // Update the Image on the Production Deployment Config
                           def dc = openshift.selector("dc/${destApp}").object()
                           dc.spec.template.spec.containers[0].image="docker-registry.default.svc:5000/${devProject}/tasks:${prodTag}"
+                          openshift.set("env", "dc/tasks", "VERSION='${prodTag}  (${destApp})'", "--overwrite")
                           openshift.apply(dc)
 
                           // Update Config Map in change config files changed in the source
-                          openshift.selector("configmap", "${destApp}-config").delete()
-                          def configmap = openshift.create("configmap", "${destApp}-config", "--from-file=./${contextDir}/configuration/application-users.properties", "--from-file=./${contextDir}/configuration/application-roles.properties" )
+                          // openshift.selector("configmap", "${destApp}-config").delete()
+                          def configmap = openshift.create("configmap", "${destApp}-config", "--from-file=./configuration/application-users.properties", "--from-file=./configuration/application-roles.properties" )
 
                           // Deploy the inactive application.
                           openshift.selector("dc", "${destApp}").rollout().latest();
