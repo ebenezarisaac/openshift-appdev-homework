@@ -1,4 +1,5 @@
 #!groovy
+def GUID = "784c"
 podTemplate(
   label: "skopeo-pod",
   cloud: "openshift",
@@ -18,7 +19,6 @@ podTemplate(
     // Define Maven Command to point to the correct
     // settings for our Nexus installation
     def mvnCmd = "mvn -s ../nexus_settings.xml"
-    def GUID = "784c"
     def devProject  = "784c-tasks-dev"
     def prodProject = "784c-tasks-prod"
 
