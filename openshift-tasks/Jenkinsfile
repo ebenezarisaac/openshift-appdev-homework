@@ -151,7 +151,7 @@ podTemplate(
       stage('Blue/Green Production Deployment') {
         echo "Blue/Green Deployment"
 
-        sh("oc delete configmap ${destApp}-config --ignore-not-found=true -n ${prodProject}") 
+        // sh("oc delete configmap ${destApp}-config --ignore-not-found=true -n ${prodProject}") 
         script {
           openshift.withCluster() {
             openshift.withProject("${prodProject}") {
