@@ -127,6 +127,7 @@ podTemplate(
             }
           }
         }
+      }
 
       // Copy Image to Nexus container registry
       stage('Copy Image to Nexus Docker Registry') {
